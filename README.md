@@ -7,7 +7,29 @@
 
 # Leetcode Anki card generator
 
+## Alex Bowe's Update
+
+I have modified Prius's code in the following ways:
+
+- Added a tag for all [Grind 75](https://www.techinterviewhandbook.org/grind75) problems.
+- [The order of these questions is important](https://www.techinterviewhandbook.org/grind75/faq) and Anki is 
+uncooperative when it comes to changing new card order, so I sort the and add them in the order that they appear in the list.
+- Added an option (in code only) to omit LeetCode problems that aren't on the Grind 75 list.
+- Added an option (in code only) to omit premium questions (useful if you are building the deck for
+someone else).
+
+Ideally this could be merged back into the original repository. These changes should be made:
+
+- Add command-line flags for the new options above.
+- Add support for multiple subsets, where the user can specify a list of text files defining these subsets.
+This could just be a list of question slugs on each line, with the filename providing the name of the subset
+(which would determine the resulting tag).
+- Move the Grind 75 fetching code to a separate script, and update the `Makefile` to use it to generate a `grind75.txt`
+file which can be used as a command-line argument.
+- Add a command-line flag to suspend cards outside of the union of the subsets (suspension can be nicer than omission).
+
 ## Summary
+
 By running this script you'll be able to generate Anki cards with all the leetcode problems.
 
 I personally use it to track my grinding progress.
