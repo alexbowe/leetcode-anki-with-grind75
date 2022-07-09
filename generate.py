@@ -209,7 +209,9 @@ async def generate(
 
     # TODO: Add a way to specify subsets (in order) from the command line
     # (probably from a set of files where each slug is on a separate line,
-    # and the filename determines the subset name and tag)
+    # and the filename determines the subset name and tag).
+    # Provide a separate script to generate a grind75.txt file that can be
+    # used as a subset.
     grind75_subset = get_grind75_lookup_table()
 
     # Sort problems by their location in the Grind 75 list.
