@@ -176,8 +176,8 @@ async def generate(
                 </progress>
                 <br/>
                 <b>URL:</b>
-                <a href='https://leetcode.com/problems/{{Slug}}/'>
-                    https://leetcode.com/problems/{{Slug}}/
+                <a href='https://leetcode.com/problems/{{{{Slug}}}}/'>
+                    https://leetcode.com/problems/{{{{Slug}}}}/
                 </a>
                 <br/>
                 {description_header}
