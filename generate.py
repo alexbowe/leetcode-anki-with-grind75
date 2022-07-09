@@ -7,8 +7,10 @@ known.
 import argparse
 import asyncio
 import logging
+import requests
+import re
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Coroutine, List
+from typing import Any, Awaitable, Callable, Coroutine, List, Optional, Dict
 
 # https://github.com/kerrickstaley/genanki
 import genanki  # type: ignore
@@ -19,11 +21,30 @@ import leetcode_anki.helpers.leetcode
 LEETCODE_ANKI_MODEL_ID = 4567610856
 LEETCODE_ANKI_DECK_ID = 8589798175
 OUTPUT_FILE = "leetcode.apkg"
+OUTPUT_JSON = "leetcode.json"
 ALLOWED_EXTENSIONS = {".py", ".go"}
+GRIND75_URL = "https://www.techinterviewhandbook.org/grind75?difficulty=Medium&difficulty=Hard&difficulty=Easy&order=all_rounded&weeks=8&hours=8&mode=all&grouping=none"
+GRIND75_NAME = "grind75"
 
 
 logging.getLogger().setLevel(logging.INFO)
 
+
+def get_grind75_problem_slugs() -> List[str]:
+    """
+    Get the problem slugs for all problems of the Grind 75 problem collection, in order.
+
+    Note that there are more than 75 problems.
+    """
+    response = requests.get(GRIND75_URL)
+    response.raise_for_status()
+    return re.findall(b'https://leetcode.com/problems/(.*?)\"', response.content)
+
+def get_grind75_lookup_table() -> Dict[str, int]:
+    """
+    Get the reverse lookup table to specify the order of each Grind 75 problem.
+    """
+    return {slug.decode("utf8"):i for i,slug in enumerate(get_grind75_problem_slugs())}
 
 def parse_args() -> argparse.Namespace:
     """
@@ -73,10 +94,13 @@ async def generate_anki_note(
     leetcode_data: leetcode_anki.helpers.leetcode.LeetcodeData,
     leetcode_model: genanki.Model,
     leetcode_task_handle: str,
+    subset_lookup: Optional[Dict[str, int]] = None,
+    subset_name: str = "custom_subset",
 ) -> LeetcodeNote:
     """
     Generate a single Anki flashcard
     """
+    subset_lookup = subset_lookup or dict()
     return LeetcodeNote(
         model=leetcode_model,
         fields=[
@@ -100,14 +124,14 @@ async def generate_anki_note(
             ),
             str(await leetcode_data.freq_bar(leetcode_task_handle)),
         ],
-        tags=await leetcode_data.tags(leetcode_task_handle),
+        tags=await leetcode_data.tags(leetcode_task_handle) + ([subset_name] if leetcode_task_handle in subset_lookup else []),
         # FIXME: sort field doesn't work doesn't work
         sort_field=str(await leetcode_data.freq_bar(leetcode_task_handle)).zfill(3),
     )
 
 
 async def generate(
-    start: int, stop: int, page_size: int, list_id: str, output_file: str
+    start: int, stop: int, page_size: int, list_id: str, output_file: str, grind75_only=False, allow_premium=True
 ) -> None:
     """
     Generate an Anki deck
@@ -183,10 +207,28 @@ async def generate(
 
     task_handles = await leetcode_data.all_problems_handles()
 
+    # TODO: Add a way to specify subsets (in order) from the command line
+    # (probably from a set of files where each slug is on a separate line,
+    # and the filename determines the subset name and tag)
+    grind75_subset = get_grind75_lookup_table()
+
+    # Sort problems by their location in the Grind 75 list.
+    # This order is a good order to prioritize problems.
+    # See https://www.techinterviewhandbook.org/grind75/faq for why.
+    # All problems not in the subset will sort after these in their original order
+    # due to Python using a stable sort algorithm.
+    task_handles.sort(key=lambda x: grind75_subset.get(x, len(grind75_subset)))
+
+    if grind75_only:
+        task_handles = [x for x in task_handles if x in grind75_subset]
+    
+    if not allow_premium:
+        task_handles = [x for x in task_handles if not await leetcode_data.paid(x)]
+
     logging.info("Generating flashcards")
     for leetcode_task_handle in task_handles:
         note_generators.append(
-            generate_anki_note(leetcode_data, leetcode_model, leetcode_task_handle)
+            generate_anki_note(leetcode_data, leetcode_model, leetcode_task_handle, grind75_subset, GRIND75_NAME)
         )
 
     for leetcode_note in tqdm(note_generators, unit="flashcard"):
@@ -208,7 +250,8 @@ async def main() -> None:
         args.list_id,
         args.output_file,
     )
-    await generate(start, stop, page_size, list_id, output_file)
+    # TODO: Add CLI parameters for subset and premium
+    await generate(start, stop, page_size, list_id, output_file, grind75_only=False, allow_premium=True)
 
 
 if __name__ == "__main__":
