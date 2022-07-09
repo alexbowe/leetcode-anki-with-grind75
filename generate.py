@@ -6,6 +6,7 @@ known.
 
 import argparse
 import asyncio
+from doctest import debug_script
 import logging
 import requests
 import re
@@ -96,6 +97,7 @@ async def generate_anki_note(
     leetcode_task_handle: str,
     subset_lookup: Optional[Dict[str, int]] = None,
     subset_name: str = "custom_subset",
+    output_description: bool = True,
 ) -> LeetcodeNote:
     """
     Generate a single Anki flashcard
@@ -108,7 +110,7 @@ async def generate_anki_note(
             str(await leetcode_data.problem_id(leetcode_task_handle)),
             str(await leetcode_data.title(leetcode_task_handle)),
             str(await leetcode_data.category(leetcode_task_handle)),
-            await leetcode_data.description(leetcode_task_handle),
+            await leetcode_data.description(leetcode_task_handle) if output_description else "",
             await leetcode_data.difficulty(leetcode_task_handle),
             "yes" if await leetcode_data.paid(leetcode_task_handle) else "no",
             str(await leetcode_data.likes(leetcode_task_handle)),
@@ -131,11 +133,12 @@ async def generate_anki_note(
 
 
 async def generate(
-    start: int, stop: int, page_size: int, list_id: str, output_file: str, grind75_only=False, allow_premium=True
+    start: int, stop: int, page_size: int, list_id: str, output_file: str, grind75_only=False, allow_premium=True, output_description=True,
 ) -> None:
     """
     Generate an Anki deck
     """
+    description_header = "" if not output_description else "<h3>Description</h3>"
     leetcode_model = genanki.Model(
         LEETCODE_ANKI_MODEL_ID,
         "Leetcode model",
@@ -158,18 +161,18 @@ async def generate(
         templates=[
             {
                 "name": "Leetcode",
-                "qfmt": """
-                <h2>{{Id}}. {{Title}}</h2>
-                <b>Difficulty:</b> {{Difficulty}}<br/>
-                &#128077; {{Likes}} &#128078; {{Dislikes}}<br/>
+                "qfmt": f"""
+                <h2>{{{{Id}}}}. {{{{Title}}}}</h2>
+                <b>Difficulty:</b> {{{{Difficulty}}}}<br/>
+                &#128077; {{{{Likes}}}} &#128078; {{{{Dislikes}}}}<br/>
                 <b>Submissions (total/accepted):</b>
-                {{SubmissionsTotal}}/{{SubmissionsAccepted}}
-                ({{SumissionAcceptRate}}%)
+                {{{{SubmissionsTotal}}}}/{{{{SubmissionsAccepted}}}}
+                ({{{{SumissionAcceptRate}}}}%)
                 <br/>
-                <b>Topic:</b> {{Topic}}<br/>
+                <b>Topic:</b> {{{{Topic}}}}<br/>
                 <b>Frequency:</b>
-                <progress value="{{Frequency}}" max="100">
-                {{Frequency}}%
+                <progress value="{{{{Frequency}}}}" max="100">
+                {{{{Frequency}}}}%
                 </progress>
                 <br/>
                 <b>URL:</b>
@@ -177,8 +180,8 @@ async def generate(
                     https://leetcode.com/problems/{{Slug}}/
                 </a>
                 <br/>
-                <h3>Description</h3>
-                {{Content}}
+                {description_header}
+                {{{{Content}}}}
                 """,
                 "afmt": """
                 {{FrontSide}}
@@ -230,7 +233,7 @@ async def generate(
     logging.info("Generating flashcards")
     for leetcode_task_handle in task_handles:
         note_generators.append(
-            generate_anki_note(leetcode_data, leetcode_model, leetcode_task_handle, grind75_subset, GRIND75_NAME)
+            generate_anki_note(leetcode_data, leetcode_model, leetcode_task_handle, grind75_subset, GRIND75_NAME, output_description)
         )
 
     for leetcode_note in tqdm(note_generators, unit="flashcard"):
@@ -253,7 +256,7 @@ async def main() -> None:
         args.output_file,
     )
     # TODO: Add CLI parameters for subset and premium
-    await generate(start, stop, page_size, list_id, output_file, grind75_only=False, allow_premium=True)
+    await generate(start, stop, page_size, list_id, output_file, grind75_only=False, allow_premium=True, output_description=True)
 
 
 if __name__ == "__main__":
