@@ -17,6 +17,10 @@ uncooperative when it comes to changing new card order, so I sort the and add th
 - Added an option (in code only) to omit LeetCode problems that aren't on the Grind 75 list.
 - Added an option (in code only) to omit premium questions (useful if you are building the deck for
 someone else).
+- Added an option to disable outputting the problem statement. This is useful if you want to share the deck without getting sued.
+
+A pre-compiled deck with all 169 Grind 75 problems (including premium problems) and no problem description
+(for the sake of legality) is available [here](Grind75.apkg).
 
 Ideally this could be merged back into the original repository. These changes should be made:
 
