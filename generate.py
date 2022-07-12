@@ -24,7 +24,7 @@ LEETCODE_ANKI_DECK_ID = 8589798175
 OUTPUT_FILE = "leetcode.apkg"
 OUTPUT_JSON = "leetcode.json"
 ALLOWED_EXTENSIONS = {".py", ".go"}
-GRIND75_URL = "https://www.techinterviewhandbook.org/grind75?difficulty=Medium&difficulty=Hard&difficulty=Easy&order=all_rounded&weeks=8&hours=8&mode=all&grouping=none"
+GRIND75_URL = "https://www.techinterviewhandbook.org/grind75?mode=all&grouping=none&order=all_rounded"
 GRIND75_NAME = "grind75"
 
 
