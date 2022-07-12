@@ -13,7 +13,7 @@ I have modified Prius's code in the following ways:
 
 - Added a tag for all [Grind 75](https://www.techinterviewhandbook.org/grind75) problems.
 - [The order of these questions is important](https://www.techinterviewhandbook.org/grind75/faq) and Anki is 
-uncooperative when it comes to changing new card order, so I sort the and add them in the order that they appear in the list.
+uncooperative when it comes to changing new card order, so I add them in the order that they appear in the list.
 - Added an option (in code only) to omit LeetCode problems that aren't on the Grind 75 list.
 - Added an option (in code only) to omit premium questions (useful if you are building the deck for
 someone else).
