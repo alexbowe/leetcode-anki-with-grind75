@@ -126,7 +126,7 @@ async def generate_anki_note(
             ),
             str(await leetcode_data.freq_bar(leetcode_task_handle)),
         ],
-        tags=await leetcode_data.tags(leetcode_task_handle) + ([subset_name] if leetcode_task_handle in subset_lookup else []),
+        tags=await leetcode_data.tags(leetcode_task_handle) + ([f"LeetCode::subset::{subset_name}"] if leetcode_task_handle in subset_lookup else []),
         # FIXME: sort field doesn't work doesn't work
         sort_field=str(await leetcode_data.freq_bar(leetcode_task_handle)).zfill(3),
     )

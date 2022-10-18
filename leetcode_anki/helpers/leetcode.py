@@ -212,6 +212,7 @@ class LeetcodeData:
                     }
                     stats
                     hints
+                    companyTagStats
                 }
               }
             }
@@ -377,13 +378,27 @@ class LeetcodeData:
 
     async def tags(self, problem_slug: str) -> List[str]:
         """
-        List of the tags for this problem (string slugs)
+        List of the tags for this problem (string slugs).
+
+        This will include the following tag groups (for use with the
+        Hierarchical Tags addon):
+        - LeetCode::topic::
+        - LeetCode::company::
+        - LeetCode::difficulty::
         """
         data = self._get_problem_data(problem_slug)
-        tags = list(map(lambda x: x.slug, data.topic_tags))
-        tags.append(f"difficulty-{data.difficulty.lower()}-tag")
-        return tags
+        tags = list(map(lambda x: f"LeetCode::topic::{x.slug}", data.topic_tags))
 
+        company_stats = list(json.loads(data.company_tag_stats).values())[0]
+        companies = [entry["slug"] for entry in company_stats]
+        tags.extend([
+            f"LeetCode::company::{company}"
+            for company in companies
+        ])
+
+        tags.append(f"LeetCode::difficulty::{data.difficulty.lower()}")
+        return tags
+    
     async def freq_bar(self, problem_slug: str) -> float:
         """
         Returns percentage for frequency bar

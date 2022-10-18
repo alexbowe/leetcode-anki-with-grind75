@@ -18,6 +18,8 @@ uncooperative when it comes to changing new card order, so I add them in the ord
 - Added an option (in code only) to omit premium questions (useful if you are building the deck for
 someone else).
 - Added an option to disable outputting the problem statement. This is useful if you want to share the deck without getting sued.
+- Added company tags.
+- Arranged all tags hierarchically (for use with [this add-on](https://ankiweb.net/shared/info/594329229)).
 
 A pre-compiled deck with all 169 Grind 75 problems (including premium problems) and no problem description
 (for the sake of legality) is available [here](Grind75.apkg).
