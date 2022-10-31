@@ -251,7 +251,8 @@ async def generate(
     for slug,i in grind75_subset.items():
         if i < 75:
             subsets[slug].add(f"LeetCode::subset::{GRIND75_NAME}::base")
-        subsets[slug].add(f"LeetCode::subset::{GRIND75_NAME}::extended")
+        else:
+            subsets[slug].add(f"LeetCode::subset::{GRIND75_NAME}::extended")
 
     unsuspended_subsets = {
         f"LeetCode::subset::{GRIND75_NAME}::base"
