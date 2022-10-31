@@ -8,8 +8,10 @@ import argparse
 import asyncio
 from doctest import debug_script
 import logging
+from pyclbr import Function
 import requests
 import re
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Coroutine, List, Optional, Dict
 
@@ -95,15 +97,26 @@ async def generate_anki_note(
     leetcode_data: leetcode_anki.helpers.leetcode.LeetcodeData,
     leetcode_model: genanki.Model,
     leetcode_task_handle: str,
-    subset_lookup: Optional[Dict[str, int]] = None,
-    subset_name: str = "custom_subset",
     output_description: bool = True,
+    subsets: Optional[Dict[str, str]] = None,
+    suspend: Optional[Function] = None,
 ) -> LeetcodeNote:
     """
     Generate a single Anki flashcard
     """
-    subset_lookup = subset_lookup or dict()
-    return LeetcodeNote(
+    def get_subsets(slug):
+        return list(sorted(subsets[slug]))
+
+    def paid_tag(paid):
+        if paid:
+            return "LeetCode::access::paid"
+        return "LeetCode::access::free"
+
+    is_paid = await leetcode_data.paid(leetcode_task_handle)
+
+    suspend = suspend or (lambda x: False)
+
+    note = LeetcodeNote(
         model=leetcode_model,
         fields=[
             leetcode_task_handle,
@@ -112,7 +125,7 @@ async def generate_anki_note(
             str(await leetcode_data.category(leetcode_task_handle)),
             await leetcode_data.description(leetcode_task_handle) if output_description else "",
             await leetcode_data.difficulty(leetcode_task_handle),
-            "yes" if await leetcode_data.paid(leetcode_task_handle) else "no",
+            "yes" if is_paid else "no",
             str(await leetcode_data.likes(leetcode_task_handle)),
             str(await leetcode_data.dislikes(leetcode_task_handle)),
             str(await leetcode_data.submissions_total(leetcode_task_handle)),
@@ -126,10 +139,14 @@ async def generate_anki_note(
             ),
             str(await leetcode_data.freq_bar(leetcode_task_handle)),
         ],
-        tags=await leetcode_data.tags(leetcode_task_handle) + ([f"LeetCode::subset::{subset_name}"] if leetcode_task_handle in subset_lookup else []),
-        # FIXME: sort field doesn't work doesn't work
+        tags=await leetcode_data.tags(leetcode_task_handle) + get_subsets(leetcode_task_handle) + [paid_tag(is_paid)],
+        # FIXME: sort field doesn't work
         sort_field=str(await leetcode_data.freq_bar(leetcode_task_handle)).zfill(3),
     )
+    if suspend(leetcode_task_handle):
+        for card in note.cards:
+            card.suspend = True
+    return note
 
 
 async def generate(
@@ -230,10 +247,33 @@ async def generate(
     if not allow_premium:
         task_handles = [x for x in task_handles if not await leetcode_data.paid(x)]
 
+    subsets = defaultdict(lambda: {"LeetCode::subset::all"})
+    for slug,i in grind75_subset.items():
+        if i < 75:
+            subsets[slug].add(f"LeetCode::subset::{GRIND75_NAME}::base")
+        subsets[slug].add(f"LeetCode::subset::{GRIND75_NAME}::extended")
+
+    unsuspended_subsets = {
+        f"LeetCode::subset::{GRIND75_NAME}::base"
+    }
+
+    def suspend(slug):
+        # Suspend any cards that are not in an unsuspended subset.
+        # Note that if they are in one subset that is unsuspended and
+        # another that is not unsuspended, they won't be suspended.
+        return len(subsets[slug] & unsuspended_subsets) == 0
+        
     logging.info("Generating flashcards")
     for leetcode_task_handle in task_handles:
         note_generators.append(
-            generate_anki_note(leetcode_data, leetcode_model, leetcode_task_handle, grind75_subset, GRIND75_NAME, output_description)
+            generate_anki_note(
+                    leetcode_data,
+                    leetcode_model,
+                    leetcode_task_handle,
+                    output_description,
+                    subsets,
+                    suspend = suspend
+            )
         )
 
     for leetcode_note in tqdm(note_generators, unit="flashcard"):

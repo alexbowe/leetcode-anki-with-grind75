@@ -20,6 +20,9 @@ someone else).
 - Added an option to disable outputting the problem statement. This is useful if you want to share the deck without getting sued.
 - Added company tags.
 - Arranged all tags hierarchically (for use with [this add-on](https://ankiweb.net/shared/info/594329229)).
+- Added paid/free tags (these are card properties but tags can be nicer to work with).
+- Tagged `grind75::base` and `grind75::extended`.
+- Suspend all cards outside of `grind75::base` by default.
 
 A pre-compiled deck with all 169 Grind 75 problems (including premium problems) and no problem description
 (for the sake of legality) is available [here](Grind75.apkg).
@@ -32,7 +35,7 @@ This could just be a list of question slugs on each line, with the filename prov
 (which would determine the resulting tag).
 - Move the Grind 75 fetching code to a separate script, and update the `Makefile` to use it to generate a `grind75.txt`
 file which can be used as a command-line argument.
-- Add a command-line flag to suspend cards outside of the union of the subsets (suspension can be nicer than omission).
+- Add a command-line flag to suspend cards outside of a user specified union of subsets (suspension can be nicer than omission).
 
 ## Summary
 
@@ -74,7 +77,7 @@ python -m venv leetcode-anki
 .\leetcode-anki\Scripts\activate.bat
 ```
 
-Then initialize session id variable. You can get it directly from your browser (if you're using chrome, cookies can be found here chrome://settings/cookies/detail?site=leetcode.com)
+Then initialize session id variable. You can get it directly from your browser (if you're using chrome, cookies can be found using this method: https://developer.chrome.com/docs/devtools/storage/cookies/)
 
 Linux/Macos
 ```
