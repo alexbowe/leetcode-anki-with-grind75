@@ -14,6 +14,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Coroutine, List, Optional, Dict
+import json
 
 # https://github.com/kerrickstaley/genanki
 import genanki  # type: ignore
@@ -138,6 +139,8 @@ async def generate_anki_note(
                 )
             ),
             str(await leetcode_data.freq_bar(leetcode_task_handle)),
+            str(await leetcode_data.total_times_encountered(leetcode_task_handle)),
+            json.dumps(await leetcode_data.company_stats(leetcode_task_handle)),
         ],
         tags=await leetcode_data.tags(leetcode_task_handle) + get_subsets(leetcode_task_handle) + [paid_tag(is_paid)],
         # FIXME: sort field doesn't work
@@ -158,7 +161,7 @@ async def generate(
     description_header = "" if not output_description else "<h3>Description</h3>"
     leetcode_model = genanki.Model(
         LEETCODE_ANKI_MODEL_ID,
-        "Leetcode model",
+        "LeetCode model",
         fields=[
             {"name": "Slug"},
             {"name": "Id"},
@@ -173,11 +176,13 @@ async def generate(
             {"name": "SubmissionsAccepted"},
             {"name": "SumissionAcceptRate"},
             {"name": "Frequency"},
+            {"name": "Total Times Encountered"}, # Should correlate to frequency but might not?
+            {"name": "Company Stats"},
             # TODO: add hints
         ],
         templates=[
             {
-                "name": "Leetcode",
+                "name": "LeetCode",
                 "qfmt": f"""
                 <h2>{{{{Id}}}}. {{{{Title}}}}</h2>
                 <b>Difficulty:</b> {{{{Difficulty}}}}<br/>

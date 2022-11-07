@@ -389,7 +389,7 @@ class LeetcodeData:
         data = self._get_problem_data(problem_slug)
         tags = list(map(lambda x: f"LeetCode::topic::{x.slug}", data.topic_tags))
 
-        company_stats = list(json.loads(data.company_tag_stats).values())[0]
+        company_stats = await self.company_stats(problem_slug)
         companies = [entry["slug"] for entry in company_stats]
         tags.extend([
             f"LeetCode::company::{company}"
@@ -398,6 +398,15 @@ class LeetcodeData:
 
         tags.append(f"LeetCode::difficulty::{data.difficulty.lower()}")
         return tags
+    
+    async def total_times_encountered(self, problem_slug: str) -> int:
+        company_stats = await self.company_stats(problem_slug)
+        return sum(x["timesEncountered"] for x in company_stats) if company_stats else 0
+    
+    async def company_stats(self, problem_slug: str) -> List[Dict[str, Any]]:
+        data = self._get_problem_data(problem_slug)
+        company_stats = list(json.loads(data.company_tag_stats).values())[0]
+        return company_stats
     
     async def freq_bar(self, problem_slug: str) -> float:
         """
