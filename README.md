@@ -23,6 +23,8 @@ someone else).
 - Added paid/free tags (these are card properties but tags can be nicer to work with).
 - Tagged `grind75::base` and `grind75::extended`.
 - Suspend all cards outside of `grind75::base` by default.
+- Updated notes to have company stats for aggregation.
+- Added script `get_tag_stats.py` to output CSVs of frequency for each topic (e.g. `arrays`).
 
 A pre-compiled deck with all 169 Grind 75 problems (including premium problems) and no problem description
 (for the sake of legality) is available [here](Grind75.apkg).
