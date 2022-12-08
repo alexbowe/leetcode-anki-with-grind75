@@ -50,6 +50,15 @@ def get_sorted_tag_total_times_encountered(df):
     
     return new_df.sort_values(["times_encountered"],ascending=False)
 
+def get_sorted_slug_total_times_encountered(df):
+    # Get total times encountered
+    new_df = df.groupby("slug").times_encountered.sum()
+    
+    # Groupby removes the index, so we need to remove it to sort it
+    new_df = new_df.reset_index()
+    
+    return new_df.sort_values(["times_encountered"],ascending=False)
+
 CSV_COLUMNS = [
     "slug",
     "id",
@@ -100,8 +109,16 @@ global_total_times_encountered_df = get_sorted_tag_total_times_encountered(df)
 faang_df = df[df.company.isin(FAANG_COMPANIES)]
 faang_total_times_encountered_df = get_sorted_tag_total_times_encountered(faang_df)
 
+# Get slug-based total times encountered
+global_slug_total_times_encountered_df = get_sorted_slug_total_times_encountered(df)
+
+# Get slug-based total times encountered for FAANG
+faang_slug_total_times_encountered_df = get_sorted_slug_total_times_encountered(faang_df)
+
 # Write to CSV without the original row number
 df.to_csv("leetcode_stats.csv", index=False)
+global_slug_total_times_encountered_df.to_csv("global_leetcode_slug_stats.csv", index=False)
+faang_slug_total_times_encountered_df.to_csv("faang_leetcode_slug_stats.csv", index=False)
 global_total_times_encountered_df.to_csv("global_leetcode_tag_stats.csv", index=False)
 faang_total_times_encountered_df.to_csv("faang_leetcode_tag_stats.csv", index=False)
 
