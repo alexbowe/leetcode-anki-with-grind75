@@ -23,6 +23,7 @@ import pandas as pd
 # See https://github.com/ankidroid/Anki-Android/wiki/Database-Structure
 CSV_PATH = "Selected Notes.csv"
 TOPIC_TAG_PREFIX = "LeetCode::topic::"
+GRIND_75_BASE_TAG = "LeetCode::subset::grind75::base"
 FAANG_COMPANIES = {"facebook", "amazon", "airbnb", "netflix", "google"}
 
 def get_company_stats_dict(x):
@@ -48,16 +49,24 @@ def get_sorted_tag_total_times_encountered(df):
     # Groupby removes the index, so we need to remove it to sort it
     new_df = new_df.reset_index()
     
-    return new_df.sort_values(["times_encountered"],ascending=False)
+    new_df = new_df.sort_values(["times_encountered"],ascending=False)
+    new_df["freq"] = new_df.times_encountered / new_df.times_encountered.sum()
+    new_df["cumsum"] = new_df.times_encountered.cumsum()
+    new_df["cumfreq"] = new_df["cumsum"] / new_df.times_encountered.sum()
+    return new_df
 
 def get_sorted_slug_total_times_encountered(df):
     # Get total times encountered
-    new_df = df.groupby("slug").times_encountered.sum()
+    new_df = df.groupby(["slug", "grind75"]).times_encountered.sum()
     
     # Groupby removes the index, so we need to remove it to sort it
     new_df = new_df.reset_index()
     
-    return new_df.sort_values(["times_encountered"],ascending=False)
+    new_df = new_df.sort_values(["times_encountered"],ascending=False)
+    new_df["freq"] = new_df.times_encountered / new_df.times_encountered.sum()
+    new_df["cumsum"] = new_df.times_encountered.cumsum()
+    new_df["cumfreq"] = new_df["cumsum"] / new_df.times_encountered.sum()
+    return new_df
 
 CSV_COLUMNS = [
     "slug",
@@ -79,6 +88,9 @@ CSV_COLUMNS = [
 ]
 
 df = pd.read_csv(CSV_PATH, names=CSV_COLUMNS)
+
+# Add grind75 column
+df["grind75"] = df.tags.str.contains(GRIND_75_BASE_TAG)
 
 # Split tags column
 df["tags"] = df.tags.str.split(" ").tolist()
